@@ -5,6 +5,10 @@
     This script installs imports certificates to Certificate Stor so OS can trust them.
 .PARAMETER Certificates
     The array of certificates content in PEM format
+.PARAMETER DataSourceUrl
+    The Prometheus endpoint for metrics (without protocol)
+.PARAMETER DataSourceSecret
+    The Prometheus endpoint password (Basic-Auth)
 .PARAMETER CertStoreLocation
     Certificate Store Location (default: 'Cert:\LocalMachine\Root')
 .PARAMETER FilePath
@@ -39,6 +43,8 @@ e5xCvzC/
 -----END CERTIFICATE-----
   '@",
   [string]$CertStoreLocation = 'Cert:\LocalMachine\Root',
+  [string]$DataSourceUrl = "prometheus.monitoring.local",
+  [string]$DataSourceSecret = "password",
   [string]$FilePath = '.\CertToImport.cer'
 )
 
@@ -49,3 +55,5 @@ foreach ($Certificate in $Certificates) {
   Remove-Item -Path $FilePath
   Write-Host "Import is done"
 }
+
+.\Install-MonitoringAgents.ps1 -DataSourceUrl "$DataSourceUrl" -DataSourceSecret "$DataSourceSecret"
