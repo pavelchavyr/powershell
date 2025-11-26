@@ -15,8 +15,8 @@
 
 param(
   [array]$Certificates = "",
-  [string]$CertStoreLocation = 'Cert:\LocalMachine\Root'
-  [string]$FilePath = 'C:\temp\CertToImport.cer',
+  [string]$CertStoreLocation = 'Cert:\LocalMachine\Root',
+  [string]$FilePath = 'C:\temp\CertToImport.cer'
 )
 
 foreach ($Certificate in $Certificates) {
