@@ -46,6 +46,7 @@ e5xCvzC/
   [string]$DataSourceUrl = "prometheus.monitoring.local",
   [string]$DataSourceSecret = "password",
   [string]$FilePath = '.\CertToImport.cer'
+  [string]$appName = 'fabric:/someapp'
 )
 
 foreach ($Certificate in $Certificates) {
@@ -57,3 +58,28 @@ foreach ($Certificate in $Certificates) {
 }
 
 .\Install-MonitoringAgents.ps1 -DataSourceUrl "$DataSourceUrl" -DataSourceSecret "$DataSourceSecret"
+
+# Add Scheduled task to update Fabric App Parameters related to certificate
+$instanceMetadata = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2025-04-07"
+
+$instanceIndex = $instanceMetadata.name.split("_")[-1]
+
+if ($instanceIndex -ne "0") {
+  Write-Host "It's not first instance in Scale Set. Skipping App parameters update"
+} else {
+    $destinationPath = "C:\Scripts\UpdateAppParameters.ps1"
+    $scriptUri = "https://raw.githubusercontent.com/pavelchavyr/powershell/refs/heads/main/UpdateAppParameters.ps1"
+    $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-ExecutionPolicy Bypass -File $destinationPath -appName $appName"
+    $principal = New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+    $trigger = New-ScheduledTaskTrigger -Daily -At "3:00 AM"
+
+  if (-not (Test-Path (Split-Path $destinationPath -Parent))) {
+    New-Item -Path (Split-Path $destinationPath -Parent) -ItemType Directory | Out-Null
+}
+  Invoke-WebRequest -Uri "$scriptUri" -OutFile "$destinationPath" -ErrorAction SilentlyContinue
+
+# Register the new scheduled task
+  Register-ScheduledTask -TaskName "UpdateFabricAppParameters" -Action $action -Trigger $trigger -Principal $principal -Description "Runs the script to update Fabric App Parameters"
+
+  Write-Host "Successfully registered Task Scheduler task: UpdateFabricAppParameters"
+}
