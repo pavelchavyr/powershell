@@ -45,7 +45,7 @@ e5xCvzC/
   [string]$CertStoreLocation = 'Cert:\LocalMachine\Root',
   [string]$DataSourceUrl = "prometheus.monitoring.local",
   [string]$DataSourceSecret = "password",
-  [string]$FilePath = '.\CertToImport.cer'
+  [string]$FilePath = '.\CertToImport.cer',
   [string]$appName = 'fabric:/someapp'
 )
 
